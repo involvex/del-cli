@@ -17,7 +17,7 @@ const cli = meow(`
 
 	Options
 	  --force, -f    Allow deleting the current working directory and outside
-	  --dry-run, -d  List what would be deleted instead of deleting
+	  --dry-run, -d  List what would be deleted instead of deleting (silent if no matches)
 	  --verbose, -v  Display the absolute path of files and directories as they are deleted
 
 	Examples
@@ -45,13 +45,15 @@ if (cli.input.length === 0) {
 	console.error('Specify at least one path');
 	process.exitCode = 1;
 } else {
-	const {verbose, ...flags} = cli.flags;
+	const {verbose, dryRun, ...flags} = cli.flags;
 
-	const onProgress = verbose ? logEvent : noop;
+	// Only use onProgress for verbose mode when not in dry-run
+	// In dry-run mode, we print the files at the end instead
+	const onProgress = verbose && !dryRun ? logEvent : noop;
 
-	const files = await deleteAsync(cli.input, {onProgress, ...flags});
+	const files = await deleteAsync(cli.input, {onProgress, dryRun, ...flags});
 
-	if (cli.flags.dryRun) {
+	if (dryRun && files.length > 0) {
 		console.log(files.join('\n'));
 	}
 }

@@ -22,7 +22,7 @@ $ del --help
 
   Options
     --force, -f    Allow deleting the current working directory and outside
-    --dry-run, -d  List what would be deleted instead of deleting
+    --dry-run, -d  List what would be deleted instead of deleting (silent if no matches)
     --verbose, -v  Display the absolute path of files and directories as they are deleted
 
   Examples
