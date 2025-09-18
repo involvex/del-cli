@@ -63,3 +63,45 @@ test('handles errors gracefully', async t => {
 	// Should not show stack trace for system errors (they're not presentable)
 	t.true(error.stderr.includes('EISDIR'));
 });
+
+test('handles directory paths with trailing slash', async t => {
+	// Create a temp file and get its directory
+	const filePath = tempWrite.sync('test');
+	const directory = filePath.slice(0, filePath.lastIndexOf('/'));
+
+	// Create a subdirectory to safely test
+	const testDirectory = `${directory}/test-del-dir`;
+	fs.mkdirSync(testDirectory);
+	fs.writeFileSync(`${testDirectory}/file.txt`, 'test');
+
+	// Test with trailing slash
+	const {stdout: stdout1} = await execa('./cli.js', ['--dry-run', '--force', `${testDirectory}/`]);
+	t.is(stdout1, testDirectory);
+
+	// Test without trailing slash
+	const {stdout: stdout2} = await execa('./cli.js', ['--dry-run', '--force', testDirectory]);
+	t.is(stdout2, testDirectory);
+
+	// Both should resolve to the same path
+	t.is(stdout1, stdout2);
+
+	// Clean up
+	fs.rmSync(testDirectory, {recursive: true, force: true});
+});
+
+test('deletes directories with trailing slash', async t => {
+	// Create a temp file and get its directory
+	const filePath = tempWrite.sync('test');
+	const directory = filePath.slice(0, filePath.lastIndexOf('/'));
+
+	// Create a subdirectory to safely test
+	const testDirectory = `${directory}/test-del-dir2`;
+	fs.mkdirSync(testDirectory);
+	fs.writeFileSync(`${testDirectory}/file.txt`, 'test');
+
+	// Delete with trailing slash
+	await execa('./cli.js', ['--force', `${testDirectory}/`]);
+
+	// Directory should no longer exist
+	t.false(fs.existsSync(testDirectory));
+});
