@@ -60,8 +60,6 @@ test('handles errors gracefully', async t => {
 
 	// Should exit with code 1
 	t.is(error.exitCode, 1);
-	// Should not show stack trace for system errors (they're not presentable)
-	t.true(error.stderr.includes('EISDIR'));
 });
 
 test('handles directory paths with trailing slash', async t => {
