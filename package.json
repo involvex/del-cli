@@ -51,8 +51,9 @@
 		"cross-platform"
 	],
 	"dependencies": {
-		"del": "^8.0.0",
-		"meow": "^13.2.0"
+		"del": "^8.0.1",
+		"meow": "^13.2.0",
+		"presentable-error": "^0.0.1"
 	},
 	"devDependencies": {
 		"ava": "^6.1.3",

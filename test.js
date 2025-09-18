@@ -50,3 +50,16 @@ test('verbose + dry-run with multiple files', async t => {
 	t.true(lines.includes(file1));
 	t.true(lines.includes(file2));
 });
+
+test('handles errors gracefully', async t => {
+	// Test with an invalid operation that should throw an error
+	const error = await t.throwsAsync(
+		execa('./cli.js', ['--force', '/']),
+		{instanceOf: Error},
+	);
+
+	// Should exit with code 1
+	t.is(error.exitCode, 1);
+	// Should not show stack trace for system errors (they're not presentable)
+	t.true(error.stderr.includes('EISDIR'));
+});

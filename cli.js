@@ -2,6 +2,7 @@
 import process from 'node:process';
 import meow from 'meow';
 import {deleteAsync} from 'del';
+import {isPresentableError} from 'presentable-error';
 
 const logEvent = event => {
 	if (event.path !== undefined) {
@@ -45,15 +46,25 @@ if (cli.input.length === 0) {
 	console.error('Specify at least one path');
 	process.exitCode = 1;
 } else {
-	const {verbose, dryRun, ...flags} = cli.flags;
+	try {
+		const {verbose, dryRun, ...flags} = cli.flags;
 
-	// Only use onProgress for verbose mode when not in dry-run
-	// In dry-run mode, we print the files at the end instead
-	const onProgress = verbose && !dryRun ? logEvent : noop;
+		// Only use onProgress for verbose mode when not in dry-run
+		// In dry-run mode, we print the files at the end instead
+		const onProgress = verbose && !dryRun ? logEvent : noop;
 
-	const files = await deleteAsync(cli.input, {onProgress, dryRun, ...flags});
+		const files = await deleteAsync(cli.input, {onProgress, dryRun, ...flags});
 
-	if (dryRun && files.length > 0) {
-		console.log(files.join('\n'));
+		if (dryRun && files.length > 0) {
+			console.log(files.join('\n'));
+		}
+	} catch (error) {
+		if (isPresentableError(error)) {
+			console.error(error.message);
+		} else {
+			throw error;
+		}
+
+		process.exitCode = 1;
 	}
 }
