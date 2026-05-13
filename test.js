@@ -1,7 +1,7 @@
 import fs from 'node:fs';
-import test from 'ava';
 import tempWrite from 'temp-write';
 import {execa} from 'execa';
+import test from 'ava';
 
 test('main', async t => {
 	const filename = tempWrite.sync('foo');
@@ -29,13 +29,21 @@ test('dry-run with files to delete', async t => {
 });
 
 test('dry-run with no files to delete', async t => {
-	const {stdout} = await execa('./cli.js', ['--dry-run', 'does-not-exist-*.txt']);
+	const {stdout} = await execa('./cli.js', [
+		'--dry-run',
+		'does-not-exist-*.txt',
+	]);
 	t.is(stdout, '');
 });
 
 test('verbose + dry-run does not duplicate output', async t => {
 	const filename = tempWrite.sync('foo');
-	const {stdout} = await execa('./cli.js', ['--verbose', '--dry-run', '--force', filename]);
+	const {stdout} = await execa('./cli.js', [
+		'--verbose',
+		'--dry-run',
+		'--force',
+		filename,
+	]);
 	// Should only print the filename once, not twice
 	t.is(stdout, filename);
 });
@@ -43,7 +51,13 @@ test('verbose + dry-run does not duplicate output', async t => {
 test('verbose + dry-run with multiple files', async t => {
 	const file1 = tempWrite.sync('foo');
 	const file2 = tempWrite.sync('bar');
-	const {stdout} = await execa('./cli.js', ['--verbose', '--dry-run', '--force', file1, file2]);
+	const {stdout} = await execa('./cli.js', [
+		'--verbose',
+		'--dry-run',
+		'--force',
+		file1,
+		file2,
+	]);
 	const lines = stdout.split('\n');
 	// Should have exactly 2 lines (one per file)
 	t.is(lines.length, 2);
@@ -53,10 +67,9 @@ test('verbose + dry-run with multiple files', async t => {
 
 test('handles errors gracefully', async t => {
 	// Test with an invalid operation that should throw an error
-	const error = await t.throwsAsync(
-		execa('./cli.js', ['--force', '/']),
-		{instanceOf: Error},
-	);
+	const error = await t.throwsAsync(execa('./cli.js', ['--force', '/']), {
+		instanceOf: Error,
+	});
 
 	// Should exit with code 1
 	t.is(error.exitCode, 1);
@@ -73,11 +86,19 @@ test('handles directory paths with trailing slash', async t => {
 	fs.writeFileSync(`${testDirectory}/file.txt`, 'test');
 
 	// Test with trailing slash
-	const {stdout: stdout1} = await execa('./cli.js', ['--dry-run', '--force', `${testDirectory}/`]);
+	const {stdout: stdout1} = await execa('./cli.js', [
+		'--dry-run',
+		'--force',
+		`${testDirectory}/`,
+	]);
 	t.is(stdout1, testDirectory);
 
 	// Test without trailing slash
-	const {stdout: stdout2} = await execa('./cli.js', ['--dry-run', '--force', testDirectory]);
+	const {stdout: stdout2} = await execa('./cli.js', [
+		'--dry-run',
+		'--force',
+		testDirectory,
+	]);
 	t.is(stdout2, testDirectory);
 
 	// Both should resolve to the same path

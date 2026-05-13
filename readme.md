@@ -4,7 +4,7 @@
 
 Useful for use in build scripts and automated things.
 
-*Note that this does permanent deletion. See [`trash-cli`](https://github.com/sindresorhus/trash-cli) for something safer.*
+_Note that this does permanent deletion. See [`trash-cli`](https://github.com/sindresorhus/trash-cli) for something safer._
 
 ## Install
 

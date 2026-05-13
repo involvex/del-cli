@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import process from 'node:process';
-import meow from 'meow';
-import {deleteAsync} from 'del';
 import {isPresentableError} from 'presentable-error';
+import {deleteAsync} from 'del';
+import meow from 'meow';
 
 const logEvent = event => {
 	if (event.path !== undefined) {
@@ -12,7 +12,8 @@ const logEvent = event => {
 
 const noop = () => {};
 
-const cli = meow(`
+const cli = meow(
+	`
 	Usage
 	  $ del <path|glob> …
 
@@ -24,23 +25,25 @@ const cli = meow(`
 	Examples
 	  $ del unicorn.png rainbow.png
 	  $ del "*.png" "!unicorn.png"
-`, {
-	importMeta: import.meta,
-	flags: {
-		force: {
-			type: 'boolean',
-			shortFlag: 'f',
-		},
-		dryRun: {
-			type: 'boolean',
-			shortFlag: 'd',
-		},
-		verbose: {
-			type: 'boolean',
-			shortFlag: 'v',
+`,
+	{
+		importMeta: import.meta,
+		flags: {
+			force: {
+				type: 'boolean',
+				shortFlag: 'f',
+			},
+			dryRun: {
+				type: 'boolean',
+				shortFlag: 'd',
+			},
+			verbose: {
+				type: 'boolean',
+				shortFlag: 'v',
+			},
 		},
 	},
-});
+);
 
 if (cli.input.length === 0) {
 	console.error('Specify at least one path');
