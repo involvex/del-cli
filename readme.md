@@ -24,10 +24,14 @@ $ del --help
     --force, -f    Allow deleting the current working directory and outside
     --dry-run, -d  List what would be deleted instead of deleting (silent if no matches)
     --verbose, -v  Display the absolute path of files and directories as they are deleted
+    --kill, -k     Force stop processes that are locking the files (requires confirmation)
+    --trash, -t    Move to trash instead of permanent deletion
 
   Examples
     $ del unicorn.png rainbow.png
     $ del "*.png" "!unicorn.png"
+    $ del node_modules -k
+    $ del temporary-file.txt -t
 ```
 
 > :warning: **Windows users**: Since `$ del` is already a builtin command on Windows, you need to use `$ del-cli` there.

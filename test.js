@@ -1,5 +1,8 @@
+import process from 'node:process'
 import tempWrite from 'temp-write'
+import path from 'node:path'
 import {execa} from 'execa'
+import os from 'node:os'
 import fs from 'node:fs'
 import test from 'ava'
 
@@ -78,12 +81,12 @@ test('handles errors gracefully', async t => {
 test('handles directory paths with trailing slash', async t => {
 	// Create a temp file and get its directory
 	const filePath = tempWrite.sync('test')
-	const directory = filePath.slice(0, filePath.lastIndexOf('/'))
+	const directory = path.dirname(filePath)
 
 	// Create a subdirectory to safely test
-	const testDirectory = `${directory}/test-del-dir`
-	fs.mkdirSync(testDirectory)
-	fs.writeFileSync(`${testDirectory}/file.txt`, 'test')
+	const testDirectory = path.join(directory, 'test-del-dir')
+	fs.mkdirSync(testDirectory, {recursive: true})
+	fs.writeFileSync(path.join(testDirectory, 'file.txt'), 'test')
 
 	// Test with trailing slash
 	const {stdout: stdout1} = await execa('./cli.js', [
@@ -91,7 +94,8 @@ test('handles directory paths with trailing slash', async t => {
 		'--force',
 		`${testDirectory}/`,
 	])
-	t.is(stdout1, testDirectory)
+	// Del-cli/del might return normalized path without trailing slash
+	t.is(path.normalize(stdout1), path.normalize(testDirectory))
 
 	// Test without trailing slash
 	const {stdout: stdout2} = await execa('./cli.js', [
@@ -99,10 +103,7 @@ test('handles directory paths with trailing slash', async t => {
 		'--force',
 		testDirectory,
 	])
-	t.is(stdout2, testDirectory)
-
-	// Both should resolve to the same path
-	t.is(stdout1, stdout2)
+	t.is(path.normalize(stdout2), path.normalize(testDirectory))
 
 	// Clean up
 	fs.rmSync(testDirectory, {recursive: true, force: true})
@@ -111,16 +112,83 @@ test('handles directory paths with trailing slash', async t => {
 test('deletes directories with trailing slash', async t => {
 	// Create a temp file and get its directory
 	const filePath = tempWrite.sync('test')
-	const directory = filePath.slice(0, filePath.lastIndexOf('/'))
+	const directory = path.dirname(filePath)
 
 	// Create a subdirectory to safely test
-	const testDirectory = `${directory}/test-del-dir2`
-	fs.mkdirSync(testDirectory)
-	fs.writeFileSync(`${testDirectory}/file.txt`, 'test')
+	const testDirectory = path.join(directory, 'test-del-dir2')
+	fs.mkdirSync(testDirectory, {recursive: true})
+	fs.writeFileSync(path.join(testDirectory, 'file.txt'), 'test')
 
 	// Delete with trailing slash
 	await execa('./cli.js', ['--force', `${testDirectory}/`])
 
 	// Directory should no longer exist
 	t.false(fs.existsSync(testDirectory))
+})
+
+test('kill flag stops locking processes', async t => {
+	// Create a temp file by copying the current node executable
+	// This ensures it's a valid "module" on Windows and an open file on Unix
+	const temporaryDir = path.join(os.tmpdir(), `del-cli-test-${Date.now()}`)
+	fs.mkdirSync(temporaryDir, {recursive: true})
+	const temporaryExecutable = path.join(
+		temporaryDir,
+		os.platform() === 'win32' ? 'locking.exe' : 'locking',
+	)
+	fs.copyFileSync(process.execPath, temporaryExecutable)
+
+	// Run the executable in the background
+	const child = execa(
+		temporaryExecutable,
+		['-e', 'setTimeout(() => {}, 10000)'],
+		{
+			cleanup: true,
+		},
+	)
+
+	// Give it a moment to start and lock the file
+	await new Promise(resolve => {
+		setTimeout(resolve, 2000)
+	})
+
+	try {
+		// Attempt to delete with the kill flag
+		// We use 'y\n' as input to confirm the kill
+		const {stdout} = await execa(
+			'./cli.js',
+			['--force', '--kill', temporaryExecutable],
+			{
+				input: 'y\n',
+			},
+		)
+
+		t.true(stdout.includes('Killed'))
+		t.false(fs.existsSync(temporaryExecutable))
+	} finally {
+		// Ensure the child is killed if the test fails
+		child.kill('SIGKILL')
+		try {
+			await child
+		} catch {}
+
+		fs.rmSync(temporaryDir, {recursive: true, force: true})
+	}
+})
+
+test('trash flag moves file to trash', async t => {
+	const filename = tempWrite.sync('foo')
+	await execa('./cli.js', ['--trash', '--force', filename])
+	t.false(fs.existsSync(filename))
+})
+
+test('trash flag with dry-run', async t => {
+	const filename = tempWrite.sync('foo')
+	const {stdout} = await execa('./cli.js', [
+		'--trash',
+		'--dry-run',
+		'--force',
+		filename,
+	])
+	t.is(stdout, filename)
+	t.true(fs.existsSync(filename))
 })
