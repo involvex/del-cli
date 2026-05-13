@@ -9,7 +9,7 @@ _Note that this does permanent deletion. See [`trash-cli`](https://github.com/si
 ## Install
 
 ```sh
-npm install --global del-cli
+npm install --global @involvex/del-cli
 ```
 
 ## Usage
