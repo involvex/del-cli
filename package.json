@@ -1,6 +1,6 @@
 {
 	"name": "@involvex/del-cli",
-	"version": "7.0.0",
+	"version": "7.0.1",
 	"description": "Delete files and directories - Cross-platform",
 	"keywords": [
 		"cli-app",
