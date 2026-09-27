@@ -1,10 +1,10 @@
+import test from 'ava'
+import {execa} from 'execa'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import process from 'node:process'
 import tempWrite from 'temp-write'
-import path from 'node:path'
-import {execa} from 'execa'
-import os from 'node:os'
-import fs from 'node:fs'
-import test from 'ava'
 
 test('main', async t => {
 	const filename = tempWrite.sync('foo')

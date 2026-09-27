@@ -1,14 +1,14 @@
 #!/usr/bin/env node
-import {isPresentableError} from 'presentable-error'
-import {setTimeout} from 'node:timers/promises'
-import readline from 'node:readline/promises'
-import process from 'node:process'
 import {deleteAsync} from 'del'
-import path from 'node:path'
 import {execa} from 'execa'
-import trash from 'trash'
-import os from 'node:os'
 import meow from 'meow'
+import os from 'node:os'
+import path from 'node:path'
+import process from 'node:process'
+import readline from 'node:readline/promises'
+import {setTimeout} from 'node:timers/promises'
+import {isPresentableError} from 'presentable-error'
+import trash from 'trash'
 
 const logEvent = event => {
 	if (event.path !== undefined) {
